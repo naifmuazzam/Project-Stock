@@ -224,6 +224,25 @@ void updateStock() {
                     printf("Enter new stock level for %s: ", nasiGorengVariations[variationChoice - 1].name);
                     scanf("%d", &newStock);
                     nasiGorengVariations[variationChoice - 1].stokLvl = newStock;
+
+                    printf("Enter new minimum stock for %s: ", nasiGorengVariations[variationChoice - 1].name);
+                    scanf("%d", &newMinStok);
+                    nasiGorengVariations[variationChoice - 1].minStok = newMinStok;
+
+                    printf("Enter new maximum stock for %s: ", nasiGorengVariations[variationChoice - 1].name);
+                    scanf("%d", &newMaxStok);
+                    nasiGorengVariations[variationChoice - 1].maxStok = newMaxStok;
+
+                    printf("Enter new buy price for %s: ", nasiGorengVariations[variationChoice - 1].name);
+                    scanf("%lf", &newBuyPrice);
+                    nasiGorengVariations[variationChoice - 1].buyPrice = newBuyPrice;
+
+                    printf("Enter new sell price for %s: ", nasiGorengVariations[variationChoice - 1].name);
+                    scanf("%lf", &newSellPrice);
+                    nasiGorengVariations[variationChoice - 1].sellPrice = newSellPrice;
+                    
+                    printf("Stock for %s successfully updated.\n\n", nasiGorengVariations[variationChoice - 1].name);
+                    break;
                 } else if (variationChoice == sizeof(nasiGorengVariations) / sizeof(nasiGorengVariations[0]) + 1) {
                     break; // Exit the switch statement to return to the main loop
                 } else {
@@ -238,6 +257,24 @@ void updateStock() {
                     printf("Enter new stock level for %s: ", airVariations[variationChoice - 1].name);
                     scanf("%d", &newStock);
                     airVariations[variationChoice - 1].stokLvl = newStock;
+
+                    printf("Enter new minimum stock for %s: ", airVariations[variationChoice - 1].name);
+                    scanf("%d", &newMinStok);
+                    airVariations[variationChoice - 1].minStok = newMinStok;
+
+                    printf("Enter new maximum stock for %s: ", airVariations[variationChoice - 1].name);
+                    scanf("%d", &newMaxStok);
+                    airVariations[variationChoice - 1].maxStok = newMaxStok;
+
+                    printf("Enter new buy price for %s: ", airVariations[variationChoice - 1].name);
+                    scanf("%lf", &newBuyPrice);
+                    airVariations[variationChoice - 1].buyPrice = newBuyPrice;
+
+                    printf("Enter new sell price for %s: ", airVariations[variationChoice - 1].name);
+                    scanf("%lf", &newSellPrice);
+                    airVariations[variationChoice - 1].sellPrice = newSellPrice;
+                    printf("Stock for %s successfully updated.\n\n", airVariations[variationChoice - 1].name);
+                    break;
                 } else if (variationChoice == sizeof(airVariations) / sizeof(airVariations[0]) + 1) {
                     break; // Exit the switch statement to return to the main loop
                 } else {
@@ -252,6 +289,25 @@ void updateStock() {
                     printf("Enter new stock level for %s: ", dessertVariations[variationChoice - 1].name);
                     scanf("%d", &newStock);
                     dessertVariations[variationChoice - 1].stokLvl = newStock;
+
+                    printf("Enter new minimum stock for %s: ", dessertVariations[variationChoice - 1].name);
+                    scanf("%d", &newMinStok);
+                    dessertVariations[variationChoice - 1].minStok = newMinStok;
+
+                    printf("Enter new maximum stock for %s: ", dessertVariations[variationChoice - 1].name);
+                    scanf("%d", &newMaxStok);
+                    dessertVariations[variationChoice - 1].maxStok = newMaxStok;
+
+                    printf("Enter new buy price for %s: ", dessertVariations[variationChoice - 1].name);
+                    scanf("%lf", &newBuyPrice);
+                    dessertVariations[variationChoice - 1].buyPrice = newBuyPrice;
+
+                    printf("Enter new sell price for %s: ", dessertVariations[variationChoice - 1].name);
+                    scanf("%lf", &newSellPrice);
+                    dessertVariations[variationChoice - 1].sellPrice = newSellPrice;
+                    
+                    printf("Stock for %s successfully updated.\n\n", dessertVariations[variationChoice - 1].name);
+                    break;
                 } else if (variationChoice == sizeof(dessertVariations) / sizeof(dessertVariations[0]) + 1) {
                     break; // Exit the switch statement to return to the main loop
                 } else {
@@ -267,6 +323,7 @@ void updateStock() {
         writeDataStock();
     }
 }
+
 
 int main() {
     int selection, 
