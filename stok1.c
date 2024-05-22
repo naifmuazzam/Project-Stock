@@ -115,6 +115,7 @@ void displayMenu() {
     printf("1. Nasi Goreng\n");
     printf("2. Air\n");
     printf("3. Dessert\n");
+    printf("4. Go Back\n");
 }
 
 void NasiGorengMenu() {
@@ -124,6 +125,7 @@ void NasiGorengMenu() {
     for (int i = 0; i < sizeof(nasiGorengVariations) / sizeof(nasiGorengVariations[0]); i++) {
         printf("| %d. %-25s | RM%.2f             | %-14d |\n", nasiGorengVariations[i].code, nasiGorengVariations[i].name, nasiGorengVariations[i].sellPrice, nasiGorengVariations[i].stokLvl);
     }
+     printf("| %d. Back to Menu\n", sizeof(nasiGorengVariations) / sizeof(nasiGorengVariations[0]) + 1);
 }
 
 void AirMenu() {
@@ -133,6 +135,7 @@ void AirMenu() {
     for (int i = 0; i < sizeof(airVariations) / sizeof(airVariations[0]); i++) {
         printf("| %d. %-25s | RM%.2f             | %-14d |\n", airVariations[i].code, airVariations[i].name, airVariations[i].sellPrice, airVariations[i].stokLvl);
     }
+      printf("| %d. Back to Menu\n", sizeof(airVariations) / sizeof(airVariations[0]) + 1);
 }
 
 void DessertMenu() {
@@ -142,6 +145,7 @@ void DessertMenu() {
     for (int i = 0; i < sizeof(dessertVariations) / sizeof(dessertVariations[0]); i++) {
         printf("| %d. %-25s | RM%.2f             | %-14d |\n", dessertVariations[i].code, dessertVariations[i].name, dessertVariations[i].sellPrice, dessertVariations[i].stokLvl);
     }
+     printf("| %d. Back to Menu\n", sizeof(dessertVariations) / sizeof(dessertVariations[0]) + 1);
 }
 
 void checkStockDetails() {
@@ -196,6 +200,7 @@ void processOrder(char *dishName, double price, int *stokLvl) {
 
     fclose(file);
     writeStockLevels();
+    writeDataStock();
 }
 
 void updateStock() {
@@ -205,7 +210,6 @@ void updateStock() {
 
     while (1) {
         displayMenu();
-        printf("4. Go back\n");
         printf("Select the category to update stock: ");
         scanf("%d", &choice);
 
@@ -220,18 +224,8 @@ void updateStock() {
                     printf("Enter new stock level for %s: ", nasiGorengVariations[variationChoice - 1].name);
                     scanf("%d", &newStock);
                     nasiGorengVariations[variationChoice - 1].stokLvl = newStock;
-                    printf("Enter new buy price for %s: ", nasiGorengVariations[variationChoice - 1].name);
-                    scanf("%lf", &newBuyPrice);
-                    nasiGorengVariations[variationChoice - 1].buyPrice = newBuyPrice;
-                    printf("Enter new sell price for %s: ", nasiGorengVariations[variationChoice - 1].name);
-                    scanf("%lf", &newSellPrice);
-                    nasiGorengVariations[variationChoice - 1].sellPrice = newSellPrice;
-                    printf("Enter new minimum stock level for %s: ", nasiGorengVariations[variationChoice - 1].name);
-                    scanf("%d", &newMinStok);
-                    nasiGorengVariations[variationChoice - 1].minStok = newMinStok;
-                    printf("Enter new maximum stock level for %s: ", nasiGorengVariations[variationChoice - 1].name);
-                    scanf("%d", &newMaxStok);
-                    nasiGorengVariations[variationChoice - 1].maxStok = newMaxStok;
+                } else if (variationChoice == sizeof(nasiGorengVariations) / sizeof(nasiGorengVariations[0]) + 1) {
+                    break; // Exit the switch statement to return to the main loop
                 } else {
                     printf("Invalid choice.\n");
                 }
@@ -244,18 +238,8 @@ void updateStock() {
                     printf("Enter new stock level for %s: ", airVariations[variationChoice - 1].name);
                     scanf("%d", &newStock);
                     airVariations[variationChoice - 1].stokLvl = newStock;
-                    printf("Enter new buy price for %s: ", airVariations[variationChoice - 1].name);
-                    scanf("%lf", &newBuyPrice);
-                    airVariations[variationChoice - 1].buyPrice = newBuyPrice;
-                    printf("Enter new sell price for %s: ", airVariations[variationChoice - 1].name);
-                    scanf("%lf", &newSellPrice);
-                    airVariations[variationChoice - 1].sellPrice = newSellPrice;
-                    printf("Enter new minimum stock level for %s: ", airVariations[variationChoice - 1].name);
-                    scanf("%d", &newMinStok);
-                    airVariations[variationChoice - 1].minStok = newMinStok;
-                    printf("Enter new maximum stock level for %s: ", airVariations[variationChoice - 1].name);
-                    scanf("%d", &newMaxStok);
-                    airVariations[variationChoice - 1].maxStok = newMaxStok;
+                } else if (variationChoice == sizeof(airVariations) / sizeof(airVariations[0]) + 1) {
+                    break; // Exit the switch statement to return to the main loop
                 } else {
                     printf("Invalid choice.\n");
                 }
@@ -268,18 +252,8 @@ void updateStock() {
                     printf("Enter new stock level for %s: ", dessertVariations[variationChoice - 1].name);
                     scanf("%d", &newStock);
                     dessertVariations[variationChoice - 1].stokLvl = newStock;
-                    printf("Enter new buy price for %s: ", dessertVariations[variationChoice - 1].name);
-                    scanf("%lf", &newBuyPrice);
-                    dessertVariations[variationChoice - 1].buyPrice = newBuyPrice;
-                    printf("Enter new sell price for %s: ", dessertVariations[variationChoice - 1].name);
-                    scanf("%lf", &newSellPrice);
-                    dessertVariations[variationChoice - 1].sellPrice = newSellPrice;
-                    printf("Enter new minimum stock level for %s: ", dessertVariations[variationChoice - 1].name);
-                    scanf("%d", &newMinStok);
-                    dessertVariations[variationChoice - 1].minStok = newMinStok;
-                    printf("Enter new maximum stock level for %s: ", dessertVariations[variationChoice - 1].name);
-                    scanf("%d", &newMaxStok);
-                    dessertVariations[variationChoice - 1].maxStok = newMaxStok;
+                } else if (variationChoice == sizeof(dessertVariations) / sizeof(dessertVariations[0]) + 1) {
+                    break; // Exit the switch statement to return to the main loop
                 } else {
                     printf("Invalid choice.\n");
                 }
@@ -290,15 +264,18 @@ void updateStock() {
         }
 
         writeStockLevels();
+        writeDataStock();
     }
 }
 
+
 int main() {
-    int selection, dishSelection;
+    int selection, 
+    dishSelection;
 
     readStockLevels();
 
-    while (1) {
+       while (1) {
         printf("\n    Welcome to Our Shop!\n");
         printf("Please make a selection\n");
         printf("1. Menu\n");
@@ -309,54 +286,66 @@ int main() {
         printf("Enter your selection: ");
         scanf("%d", &selection);
 
-        if (selection == 2) {
-            updateStock();
-            continue;
-        } else if (selection == 3) {
-            writeDataStock();
-             checkStockDetails();
-            continue;
-        } else if (selection == 4) {
-            printf("Thank you! See you again ^_^\n");
-            break;
-        }
+        switch (selection) {
+            case 1: {
+                int dishSelection;
+                do {
+                    displayMenu();
+                    printf("\nWhat would you like to see details for?\n");
+                    printf("Enter your selection: ");
+                    scanf("%d", &dishSelection);
 
-        displayMenu();
-        printf("\nWhat would you like to see details for?\n");
-        printf("Enter your selection: ");
-        scanf("%d", &dishSelection);
+                    if (dishSelection == 4) {
+                        break; // Go back
+                    }
 
-        switch (dishSelection) {
-            case 1:
-                NasiGorengMenu();
-                printf("\nWhich Nasi Goreng variation do you want: ");
-                scanf("%d", &dishSelection);
-                if (dishSelection >= 1 && dishSelection <= sizeof(nasiGorengVariations) / sizeof(nasiGorengVariations[0])) {
-                    processOrder(nasiGorengVariations[dishSelection - 1].name, nasiGorengVariations[dishSelection - 1].sellPrice, &nasiGorengVariations[dishSelection - 1].stokLvl);
-                } else {
-                    printf("Invalid selection.\n");
-                }
+                    switch (dishSelection) {
+                        case 1:
+                            NasiGorengMenu();
+                            printf("\nWhich Nasi Goreng variation do you want: ");
+                            scanf("%d", &dishSelection);
+                            if (dishSelection >= 1 && dishSelection <= sizeof(nasiGorengVariations) / sizeof(nasiGorengVariations[0])) {
+                                processOrder(nasiGorengVariations[dishSelection - 1].name, nasiGorengVariations[dishSelection - 1].sellPrice, &nasiGorengVariations[dishSelection - 1].stokLvl);
+                            } else {
+                                printf("Invalid selection.\n");
+                            }
+                            break;
+                        case 2:
+                            AirMenu();
+                            printf("\nWhich Air variation do you want: ");
+                            scanf("%d", &dishSelection);
+                            if (dishSelection >= 1 && dishSelection <= sizeof(airVariations) / sizeof(airVariations[0])) {
+                                processOrder(airVariations[dishSelection - 1].name, airVariations[dishSelection - 1].sellPrice, &airVariations[dishSelection - 1].stokLvl);
+                            } else {
+                                printf("Invalid selection.\n");
+                            }
+                            break;
+                        case 3:
+                            DessertMenu();
+                            printf("\nWhich Dessert variation do you want: ");
+                            scanf("%d", &dishSelection);
+                            if (dishSelection >= 1 && dishSelection <= sizeof(dessertVariations) / sizeof(dessertVariations[0])) {
+                                processOrder(dessertVariations[dishSelection - 1].name, dessertVariations[dishSelection - 1].sellPrice, &dessertVariations[dishSelection - 1].stokLvl);
+                            } else {
+                                printf("Invalid selection.\n");
+                            }
+                            break;
+                        default:
+                            printf("Invalid selection.\n");
+                            break;
+                    }
+                } while (1); // Loop until "Go Back" is selected
                 break;
+            }
             case 2:
-                AirMenu();
-                printf("\nWhich Air variation do you want: ");
-                scanf("%d", &dishSelection);
-                if (dishSelection >= 1 && dishSelection <= sizeof(airVariations) / sizeof(airVariations[0])) {
-                    processOrder(airVariations[dishSelection - 1].name, airVariations[dishSelection - 1].sellPrice, &airVariations[dishSelection - 1].stokLvl);
-                } else {
-                    printf("Invalid selection.\n");
-                }
+                updateStock();
                 break;
             case 3:
-                DessertMenu();
-                printf("\nWhich Dessert variation do you want: ");
-                scanf("%d", &dishSelection);
-                if (dishSelection >= 1 && dishSelection <= sizeof(dessertVariations) / sizeof(dessertVariations[0])) {
-                    processOrder(dessertVariations[dishSelection - 1].name, dessertVariations[dishSelection - 1].sellPrice, &dessertVariations[dishSelection - 1].stokLvl);
-                } else {
-                    printf("Invalid selection.\n");
-                }
+                checkStockDetails();
                 break;
+            case 4:
+                printf("Thank you! See you again ^_^\n");
+                return 0;
             default:
                 printf("Invalid selection.\n");
                 break;
