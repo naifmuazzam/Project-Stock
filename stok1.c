@@ -268,7 +268,6 @@ void updateStock() {
     }
 }
 
-
 int main() {
     int selection, 
     dishSelection;
