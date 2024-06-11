@@ -1,0 +1,3 @@
+Customer Name: amry                 | Phone Number: 1515
+Customer Name: tio                  | Phone Number: 123
+Customer Name: jim                  | Phone Number: 121
