@@ -113,3 +113,53 @@ The Bintang Bulan Kiosk Management System is a C programming language-based appl
 
 # Conclusion: 
 The Bintang Bulan Kiosk Management System is a comprehensive application that provides features for managing the daily operations of a kiosk selling traditional Malay clothing and accessories. The system is well-designed and easy to use, but there are  areas for improvement, such as error handling and code organization.
+
+# Usage
+- Compile and Run:
+- Navigate to the directory containing the source code.
+- Compile the code using a C compiler such as GCC:
+`gcc stok1.c -o stok1`
+- run the executable:
+`./stok1`
+
+        Compile the code and run the executable.
+        The program will create a sample data file MyKdata.txt if it doesn't exist already.
+        The program will also create a backup of the original data file MyKdata.ori.
+
+- Menu Options
+
+The program will display a menu with the following options:
+
+            Display All Items: Displays all items in the inventory, categorized by Lelaki, Perempuan, and Accessories.
+            Sell Item: Allows you to sell an item to a customer.
+            End of Day Report: Displays a report of all transactions made during the day, including gross profit and net profit.
+            Check Items Below Minimum Stock and Restock: Checks for items that are below the minimum stock level and allows you to restock them.
+            Exit: Exits the program and saves the profit data.
+
+Selling an Item
+
+    Choose option 2: Sell Item.
+    Enter the customer's phone number.
+    If the customer is new, enter their name.
+    Enter the item ID you want to sell.
+    Enter the quantity you want to sell.
+    The program will update the inventory and display the total price.
+
+End of Day Report
+
+    Choose option 3: End of Day Report.
+    The program will display a report of all transactions made during the day, including gross profit and net profit.
+
+Restocking Items
+
+    Choose option 4: Check Items Below Minimum Stock and Restock.
+    The program will display a list of items that are below the minimum stock level.
+    For each item, you can choose to restock it by entering 'Y' or skip it by entering 'N'.
+    The program will update the inventory accordingly.
+
+Exiting the Program
+
+    Choose option 5: Exit.
+    The program will save the profit data and exit.
+
+Note: This program uses files to store data, so make sure to run it in a directory where you have write permissions.
