@@ -1,0 +1,20 @@
+ID: 1 | Name: [LELAKI] Lengan Pendek | Quantity: 100 | Max Stock: 100 | Min Stock: 10 | Cost Price: 62.50 | Selling Price: 80.00
+ID: 2 | Name: [LELAKI] Cekak Musang | Quantity: 100 | Max Stock: 100 | Min Stock: 10 | Cost Price: 60.61 | Selling Price: 80.00
+ID: 3 | Name: [LELAKI] Teluk Belanga | Quantity: 100 | Max Stock: 100 | Min Stock: 10 | Cost Price: 62.02 | Selling Price: 80.00
+ID: 4 | Name: [LELAKI] Kurta | Quantity: 100 | Max Stock: 100 | Min Stock: 10 | Cost Price: 47.62 | Selling Price: 60.00
+ID: 5 | Name: [LELAKI] Jubah | Quantity: 100 | Max Stock: 100 | Min Stock: 10 | Cost Price: 54.26 | Selling Price: 70.00
+ID: 6 | Name: [PEREMPUAN] Cekak Musang | Quantity: 100 | Max Stock: 100 | Min Stock: 10 | Cost Price: 200.00 | Selling Price: 280.00
+ID: 7 | Name: [PEREMPUAN] Kebaya | Quantity: 100 | Max Stock: 100 | Min Stock: 10 | Cost Price: 180.00 | Selling Price: 200.00
+ID: 8 | Name: [PEREMPUAN] Pario | Quantity: 100 | Max Stock: 100 | Min Stock: 10 | Cost Price: 130.00 | Selling Price: 150.00
+ID: 9 | Name: [PEREMPUAN] Kedah | Quantity: 100 | Max Stock: 100 | Min Stock: 10 | Cost Price: 160.00 | Selling Price: 190.00
+ID: 10 | Name: [PEREMPUAN] Moden | Quantity: 100 | Max Stock: 100 | Min Stock: 10 | Cost Price: 170.00 | Selling Price: 200.00
+ID: 11 | Name: [PEREMPUAN] Jubah | Quantity: 100 | Max Stock: 100 | Min Stock: 10 | Cost Price: 150.00 | Selling Price: 170.00
+ID: 12 | Name: [PEREMPUAN] Kebarung | Quantity: 100 | Max Stock: 100 | Min Stock: 10 | Cost Price: 200.00 | Selling Price: 250.00
+ID: 13 | Name: [PEREMPUAN] Teluk Belanga | Quantity: 100 | Max Stock: 100 | Min Stock: 10 | Cost Price: 180.00 | Selling Price: 200.00
+ID: 14 | Name: Sampin | Quantity: 100 | Max Stock: 100 | Min Stock: 10 | Cost Price: 35.00 | Selling Price: 45.00
+ID: 15 | Name: Selendang | Quantity: 100 | Max Stock: 100 | Min Stock: 10 | Cost Price: 40.00 | Selling Price: 50.00
+ID: 16 | Name: Songkok | Quantity: 100 | Max Stock: 100 | Min Stock: 10 | Cost Price: 20.00 | Selling Price: 30.00
+ID: 17 | Name: Kerongsang | Quantity: 100 | Max Stock: 100 | Min Stock: 10 | Cost Price: 1.50 | Selling Price: 2.00
+ID: 18 | Name: Butang Baju | Quantity: 98 | Max Stock: 100 | Min Stock: 10 | Cost Price: 7.50 | Selling Price: 10.00
+ID: 19 | Name: Sampul Raya | Quantity: 100 | Max Stock: 100 | Min Stock: 10 | Cost Price: 4.00 | Selling Price: 5.00
+ID: 20 | Name: Handkerchief | Quantity: 100 | Max Stock: 100 | Min Stock: 10 | Cost Price: 8.00 | Selling Price: 10.00
