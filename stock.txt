@@ -1,9 +1,0 @@
-Nasi Goreng USA,30
-Nasi Goreng Cina,1
-Nasi Goreng Kampung,30
-Sirap,60
-Teh O Ais,48
-Rootbeer,17
-Ice Cream Malaysia,70
-Bingsu,20
-Cupcake,50
