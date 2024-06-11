@@ -1,410 +1,451 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h> // For access function
+#include <time.h>
 
-#define STOCK_FILE "stock.txt"
-#define DATASTOCK_FILE "datastock.txt"
+#define NUM_ITEMS_LELAKI 5
+#define NUM_ITEMS_PEREMPUAN 8
+#define NUM_ITEMS_ACCESSORIES 7
+#define NUM_ITEMS (NUM_ITEMS_LELAKI + NUM_ITEMS_PEREMPUAN + NUM_ITEMS_ACCESSORIES)
+#define FILENAME "MyKdata.txt"
+#define BACKUP_FILENAME "MyKdata.ori"
+#define CUSTOMER_FILENAME "CustomerData.txt"
+#define TRANSACTION_FILENAME "Transactions.txt"
+#define PROFIT_FILENAME "ProfitData.txt"
+#define MARKUP 0.30 // Fixed markup value (30%)
 
 typedef struct {
-    int code;
-    char name[25];
-    int stokLvl;
-    int minStok;
-    int maxStok;
-    double buyPrice;
-    double sellPrice;
-} StokItem;
+    int id;
+    char name[50];
+    int quantity;
+    int max_stock;
+    int min_stock;
+    float cost_price;
+    float selling_price;
+} Item;
 
-StokItem nasiGorengVariations[] = {
-    {1, "Nasi Goreng USA", 50, 10, 100, 0.0, 7.0},
-    {2, "Nasi Goreng Cina", 40, 10, 100, 0.0, 4.0},
-    {3, "Nasi Goreng Kampung", 30, 10, 100, 0.0, 5.0}
-};
+typedef struct {
+    char name[50];
+    char phone[15];
+} Customer;
 
-StokItem airVariations[] = {
-    {1, "Sirap", 60, 20, 100, 0.0, 1.0},
-    {2, "Teh O Ais", 50, 20, 100, 0.0, 4.0},
-    {3, "Rootbeer", 40, 20, 100, 0.0, 5.0}
-};
+typedef struct {
+    char phone[15];
+    int item_id;
+    int quantity;
+    float total_price;
+} Transaction;
 
-StokItem dessertVariations[] = {
-    {1, "Ice Cream Malaysia", 70, 30, 100, 0.0, 1.0},
-    {2, "Bingsu", 20, 5, 100, 0.0, 9.0},
-    {3, "Cupcake", 50, 20, 100, 0.0, 2.0}
-};
+// Forward declaration
+void saveProfitData(const char *filename, float grossProfit, float netProfit, float totalRestockingCost, Item items[], int numItems);
 
-void readStockLevels() {
-    FILE *file = fopen(STOCK_FILE, "r");
-    if (file == NULL) {
-        printf("Error opening stock file. Using default values.\n");
+// Global variables to track total profit and restocking costs
+float totalProfit = 0.0;
+float totalRestockingCost = 0.0;
+float grossProfit = 0.0;
+float netProfit = 0.0;
+float capital = 0.0; // initial capital
+float owedMoney = 0.0;  // Amount owed for restocking
+
+void trimTrailingSpaces(char *str) {
+    int index, i;
+    index = -1;
+
+    // Find the last non-space character
+    for (i = 0; str[i] != '\0'; i++) {
+        if (str[i] != ' ' && str[i] != '\t' && str[i] != '\n') {
+            index = i;
+        }
+    }
+
+    // Null terminate the string after the last non-space character
+    str[index + 1] = '\0';
+}
+
+void createBackup(const char *srcFilename, const char *backupFilename) {
+    FILE *srcFile = fopen(srcFilename, "r");
+    if (!srcFile) {
+        printf("Error: Unable to open source file.\n");
         return;
     }
 
-    char line[100];
-    while (fgets(line, sizeof(line), file)) {
-        char name[25];
-        int stokLvl;
-        if (sscanf(line, "%[^,],%d", name, &stokLvl) == 2) {
-            for (int i = 0; i < sizeof(nasiGorengVariations) / sizeof(nasiGorengVariations[0]); i++) {
-                if (strcmp(nasiGorengVariations[i].name, name) == 0) {
-                    nasiGorengVariations[i].stokLvl = stokLvl;
-                }
-            }
-            for (int i = 0; i < sizeof(airVariations) / sizeof(airVariations[0]); i++) {
-                if (strcmp(airVariations[i].name, name) == 0) {
-                    airVariations[i].stokLvl = stokLvl;
-                }
-            }
-            for (int i = 0; i < sizeof(dessertVariations) / sizeof(dessertVariations[0]); i++) {
-                if (strcmp(dessertVariations[i].name, name) == 0) {
-                    dessertVariations[i].stokLvl = stokLvl;
-                }
+    FILE *backupFile = fopen(backupFilename, "w");
+    if (!backupFile) {
+        printf("Error: Unable to create backup file.\n");
+        fclose(srcFile);
+        return;
+    }
+
+    char ch;
+    while ((ch = fgetc(srcFile)) != EOF) {
+        fputc(ch, backupFile);
+    }
+
+    fclose(srcFile);
+    fclose(backupFile);
+}
+
+void saveItemsToFile(const char *filename, Item items[], int numItems) {
+    FILE *file = fopen(filename, "w");
+    if (!file) {
+        printf("Error: Unable to open file for writing.\n");
+        return;
+    }
+
+    for (int i = 0; i < numItems; i++) {
+        fprintf(file, "ID: %d | Name: %s | Quantity: %d | Max Stock: %d | Min Stock: %d | Cost Price: %.2f | Selling Price: %.2f\n", 
+                items[i].id, items[i].name, items[i].quantity, 
+                items[i].max_stock, items[i].min_stock, 
+                items[i].cost_price, items[i].selling_price);
+    }
+
+    fclose(file);
+}
+
+void loadItemsFromFile(const char *filename, Item items[], int numItems) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        printf("Error: Unable to open file for reading.\n");
+        return;
+    }
+
+    for (int i = 0; i < numItems; i++) {
+        int result = fscanf(file, "ID: %d | Name: %49[^|] | Quantity: %d | Max Stock: %d | Min Stock: %d | Cost Price: %f | Selling Price: %f\n", 
+                            &items[i].id, items[i].name, &items[i].quantity, 
+                            &items[i].max_stock, &items[i].min_stock, 
+                            &items[i].cost_price, &items[i].selling_price);
+        if (result != 7) { // Ensure all 7 fields are read correctly
+            printf("Error: Incorrect data format in file.\n");
+            break;
+        }
+        trimTrailingSpaces(items[i].name); // Trim trailing spaces from item name
+    }
+
+    fclose(file);
+
+    // Fixed selling prices
+    const float fixedSellingPrices[] = {
+        80.00, 80.00, 80.00, 60.00, 70.00,
+        280.00, 200.00, 150.00, 190.00, 200.00,
+        170.00, 250.00, 200.00,
+        45.00, 50.00, 30.00, 2.00, 10.00, 5.00, 10.00
+    };
+
+    for (int i = 0; i < numItems; i++) {
+        items[i].selling_price = fixedSellingPrices[i];
+    }
+}
+
+
+void createSampleData(Item items[], int numItems) {
+    const char *names[] = {
+        "[LELAKI] Lengan Pendek", "[LELAKI] Cekak Musang", "[LELAKI] Teluk Belanga", "[LELAKI] Kurta", "[LELAKI] Jubah",
+        "[PEREMPUAN] Cekak Musang", "[PEREMPUAN] Kebaya", "[PEREMPUAN] Pario", "[PEREMPUAN] Kedah", "[PEREMPUAN] Moden",
+        "[PEREMPUAN] Jubah", "[PEREMPUAN] Kebarung", "[PEREMPUAN] Teluk Belanga",
+        "Sampin", "Selendang", "Songkok", "Kerongsang", "Butang Baju", "Sampul Raya", "Handkerchief"
+    };
+
+    const float sellingPrices[] = {
+        80.00, 80.00, 80.00, 60.00, 70.00,
+        280.00, 200.00, 150.00, 190.00, 200.00,
+        170.00, 250.00, 200.00,
+        45.00, 50.00, 30.00, 2.00, 10.00, 5.00, 10.00
+    };
+
+    const int quantities[] = {100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 200, 100}; // Initial quantities
+
+    for (int i = 0; i < numItems; i++) {
+        items[i].id = i + 1;
+        strncpy(items[i].name, names[i], 50);
+        trimTrailingSpaces(items[i].name); // Trim trailing spaces from item name
+        items[i].quantity = quantities[i]; // Initial stock quantity
+        items[i].max_stock = 100; // Maximum stock size
+        items[i].min_stock = 10; // Minimum stock size limit
+        items[i].selling_price = sellingPrices[i]; // Fixed selling price
+
+        // Calculate cost price based on fixed selling price and markup
+        items[i].cost_price = items[i].selling_price / (1 + MARKUP);
+    }
+}
+
+
+void displayItems(Item items[], int numItems, const char *category) {
+    printf("\n****** %s ******\n", category);
+    printf("-------------------------------\n");
+    for (int i = 0; i < numItems; i++) {
+        printf(" %d. %s        	| RM %.2f\n", items[i].id, items[i].name, items[i].selling_price);
+    }
+}
+
+void displayAllItems(Item items[], int numItemsLelaki, int numItemsPerempuan, int numItemsAccessories) {
+    displayItems(items, numItemsLelaki, "BAJU RAYA LELAKI");
+    displayItems(items + numItemsLelaki, numItemsPerempuan, "BAJU KURUNG PEREMPUAN");
+    displayItems(items + numItemsLelaki + numItemsPerempuan, numItemsAccessories, "ACCESSORIES RAYA");
+}
+
+int findCustomerIndex(Customer customers[], int numCustomers, const char *phone) {
+    for (int i = 0; i < numCustomers; i++) {
+        if (strcmp(customers[i].phone, phone) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void loadCustomers(Customer customers[], int *numCustomers) {
+    FILE *file = fopen(CUSTOMER_FILENAME, "r");
+    if (!file) {
+        *numCustomers = 0;
+        return;
+    }
+
+    *numCustomers = 0;
+    while (fscanf(file, "Customer Name: %49[^|]| Phone Number: %14[^\n]\n", customers[*numCustomers].name, customers[*numCustomers].phone) != EOF) {
+        (*numCustomers)++;
+    }
+
+    fclose(file);
+}
+
+void saveCustomer(const Customer *customer) {
+    FILE *file = fopen(CUSTOMER_FILENAME, "a");
+    if (!file) {
+        printf("Error: Unable to open customer file for appending.\n");
+        return;
+    }
+    
+    fprintf(file, "Customer Name: %-20s | Phone Number: %s\n", customer->name, customer->phone);
+    fclose(file);
+}
+
+void saveTransaction(const Transaction *transaction) {
+    FILE *file = fopen(TRANSACTION_FILENAME, "a");
+    if (!file) {
+        printf("Error: Unable to open transaction file for appending.\n");
+        return;
+    }
+    
+    fprintf(file, "Phone Number: %-15s | Item ID: %d | Quantity: %d | Total Price: %.2f\n", transaction->phone, transaction->item_id, transaction->quantity, transaction->total_price);
+    fclose(file);
+}
+
+void sellItem(Item items[], int numItems, Customer customers[], int *numCustomers, float sellingPrices[]) {
+    int itemId, quantity;
+    char customerPhone[15], customerName[50];
+
+    printf("Enter Customer Phone Number: ");
+    scanf("%s", customerPhone);
+
+    int customerIndex = findCustomerIndex(customers, *numCustomers, customerPhone);
+    if (customerIndex == -1) {
+        printf("New Customer! Enter Customer Name: ");
+        scanf("%s", customerName);
+        Customer newCustomer;
+        strcpy(newCustomer.phone, customerPhone);
+        strcpy(newCustomer.name, customerName);
+        customers[*numCustomers] = newCustomer;
+        saveCustomer(&newCustomer);
+        (*numCustomers)++;
+    } else {
+        strcpy(customerName, customers[customerIndex].name);
+        printf("Welcome back, %s\n", customerName);
+    }
+
+    printf("Enter Item ID: ");
+    scanf("%d", &itemId);
+
+    if (itemId < 1 || itemId > numItems) {
+        printf("Invalid Item ID. Please try again.\n");
+        return;
+    }
+
+    printf("Enter Quantity: ");
+    scanf("%d", &quantity);
+
+    if (items[itemId - 1].quantity < quantity) {
+        printf("Insufficient stock. Available quantity: %d\n", items[itemId - 1].quantity);
+        return;
+    }
+
+    items[itemId - 1].quantity -= quantity;
+
+    float totalPrice = sellingPrices[itemId - 1] * quantity;
+    totalProfit += totalPrice;
+
+    Transaction newTransaction;
+    strcpy(newTransaction.phone, customerPhone);
+    newTransaction.item_id = itemId;
+    newTransaction.quantity = quantity;
+    newTransaction.total_price = totalPrice;
+    saveTransaction(&newTransaction);
+
+    printf("Item sold successfully! Total Price: RM%.2f\n", totalPrice);
+}
+
+void displayEndOfDayReport(Item items[], int numItems) {
+    FILE *file = fopen(TRANSACTION_FILENAME, "r");
+    if (!file) {
+        printf("No transactions recorded.\n");
+        return;
+    }
+
+    float totalGrossProfitForDay = 0.0;
+    float totalCostForDay = 0.0;
+
+    printf("\n****** End of Day Report ******\n");
+    printf("-------------------------------\n");
+
+    char phone[15];
+    int item_id, quantity;
+    float total_price;
+    while (fscanf(file, "Phone Number: %14[^|] | Item ID: %d | Quantity: %d | Total Price: %f\n", phone, &item_id, &quantity, &total_price) != EOF) {
+        printf("Phone Number: %s | Item ID: %d | Quantity: %d | Total Price: RM%.2f\n", phone, item_id, quantity, total_price);
+
+        float itemGrossProfit = items[item_id - 1].selling_price * quantity;
+        float itemCost = items[item_id - 1].cost_price * quantity;
+
+        totalGrossProfitForDay += itemGrossProfit;
+        totalCostForDay += itemCost;
+    }
+
+    fclose(file);
+
+    grossProfit = totalGrossProfitForDay;
+    netProfit = grossProfit - totalCostForDay;
+
+    printf("\nTotal Gross Profit for the Day: RM%.2f\n", grossProfit);
+    printf("Total Net Profit for the Day: RM%.2f\n", netProfit);
+
+    printf("\nItems Below Minimum Stock:\n");
+    for (int i = 0; i < numItems; i++) {
+        if (items[i].quantity < items[i].min_stock) {
+            printf("Item ID: %d | Name: %s | Quantity: %d | Min Stock: %d\n", items[i].id, items[i].name, items[i].quantity, items[i].min_stock);
+        }
+    }
+
+    saveProfitData(PROFIT_FILENAME, grossProfit, netProfit, totalRestockingCost, items, numItems);
+}
+
+
+void checkItemsBelowLimitAndRestock(Item items[], int numItems) {
+    printf("\n---- Checking items below minimum stock ----\n");
+
+    int restockNeeded = 0;
+
+    for (int i = 0; i < numItems; i++) {
+        if (items[i].quantity < items[i].min_stock) {
+            restockNeeded = 1;
+            printf("Item ID: %d | Name: %s | Quantity: %d | Min Stock: %d\n", items[i].id, items[i].name, items[i].quantity, items[i].min_stock);
+        }
+    }
+
+    if (!restockNeeded) {
+        printf("No items below minimum stock.\n");
+        return;
+    }
+
+    char choice;
+    for (int i = 0; i < numItems; i++) {
+        if (items[i].quantity < items[i].min_stock) {
+            printf("\nDo you want to restock Item ID %d (%s)? (Y/N): ", items[i].id, items[i].name);
+            scanf(" %c", &choice);
+
+            if (choice == 'Y' || choice == 'y') {
+                int restockAmount = items[i].max_stock - items[i].quantity;
+                items[i].quantity += restockAmount;
+                printf("Restocked Item ID %d (%s) by %d units.\n", items[i].id, items[i].name, restockAmount);
+            } else {
+                printf("Skipping restock for Item ID %d (%s).\n", items[i].id, items[i].name);
             }
         }
     }
-    fclose(file);
 }
 
-void writeStockLevels() {
-    FILE *file = fopen(STOCK_FILE, "w");
-    if (file == NULL) {
-        printf("Error opening stock file for writing.\n");
+
+void saveProfitData(const char *filename, float grossProfit, float netProfit, float totalRestockingCost, Item items[], int numItems) {
+    FILE *file = fopen(filename, "w");
+    if (!file) {
+        printf("Error: Unable to open profit data file for writing.\n");
         return;
     }
 
-    for (int i = 0; i < sizeof(nasiGorengVariations) / sizeof(nasiGorengVariations[0]); i++) {
-        fprintf(file, "%s,%d\n", nasiGorengVariations[i].name, nasiGorengVariations[i].stokLvl);
-    }
-    for (int i = 0; i < sizeof(airVariations) / sizeof(airVariations[0]); i++) {
-        fprintf(file, "%s,%d\n", airVariations[i].name, airVariations[i].stokLvl);
-    }
-    for (int i = 0; i < sizeof(dessertVariations) / sizeof(dessertVariations[0]); i++) {
-        fprintf(file, "%s,%d\n", dessertVariations[i].name, dessertVariations[i].stokLvl);
-    }
-
+    fprintf(file, "Gross Profit: %.2f\n", grossProfit);
+    fprintf(file, "Net Profit: %.2f\n", netProfit);
     fclose(file);
 }
 
-void writeDataStock() {
-    FILE *file = fopen(DATASTOCK_FILE, "w");
-    if (file == NULL) {
-        printf("Error opening data stock file for writing.\n");
+void loadProfitData(const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        printf("No previous profit data found. Starting fresh.\n");
         return;
     }
 
-    for (int i = 0; i < sizeof(nasiGorengVariations) / sizeof(nasiGorengVariations[0]); i++) {
-        fprintf(file, "Name: %s\nStock Level: %d\nMin Stock: %d\nMax Stock: %d\nBuy Price: %.2f\nSell Price: %.2f\n\n",
-            nasiGorengVariations[i].name, nasiGorengVariations[i].stokLvl, nasiGorengVariations[i].minStok, nasiGorengVariations[i].maxStok,
-            nasiGorengVariations[i].buyPrice, nasiGorengVariations[i].sellPrice);
-    }
-    for (int i = 0; i < sizeof(airVariations) / sizeof(airVariations[0]); i++) {
-        fprintf(file, "Name: %s\nStock Level: %d\nMin Stock: %d\nMax Stock: %d\nBuy Price: %.2f\nSell Price: %.2f\n\n",
-            airVariations[i].name, airVariations[i].stokLvl, airVariations[i].minStok, airVariations[i].maxStok,
-            airVariations[i].buyPrice, airVariations[i].sellPrice);
-    }
-    for (int i = 0; i < sizeof(dessertVariations) / sizeof(dessertVariations[0]); i++) {
-        fprintf(file, "Name: %s\nStock Level: %d\nMin Stock: %d\nMax Stock: %d\nBuy Price: %.2f\nSell Price: %.2f\n\n",
-            dessertVariations[i].name, dessertVariations[i].stokLvl, dessertVariations[i].minStok, dessertVariations[i].maxStok,
-            dessertVariations[i].buyPrice, dessertVariations[i].sellPrice);
-    }
-
+    fscanf(file, "Gross Profit: %f\n", &grossProfit);
+    fscanf(file, "Net Profit: %f\n", &netProfit);
     fclose(file);
 }
 
-void displayMenu() {
-    printf("1. Nasi Goreng\n");
-    printf("2. Air\n");
-    printf("3. Dessert\n");
-    printf("4. Go Back\n");
-}
+int main() {
+    Item items[NUM_ITEMS];
+    Customer customers[100];
+    int numCustomers = 0;
+    float sellingPrices[NUM_ITEMS]; // Store selling prices
 
-void NasiGorengMenu() {
-    printf("\nNasi Goreng Variations\n");
-    printf("|       Dish                   |   Price List       |   Stock Left   |\n");
-    printf("|-------------------------------------------------------------------------|\n");
-    for (int i = 0; i < sizeof(nasiGorengVariations) / sizeof(nasiGorengVariations[0]); i++) {
-        printf("| %d. %-25s | RM%.2f             | %-14d |\n", nasiGorengVariations[i].code, nasiGorengVariations[i].name, nasiGorengVariations[i].sellPrice, nasiGorengVariations[i].stokLvl);
-    }
-     printf("| %d. Back to Menu\n", sizeof(nasiGorengVariations) / sizeof(nasiGorengVariations[0]) + 1);
-}
-
-void AirMenu() {
-    printf("\nAir Variations\n");
-    printf("|       Dish                   |   Price List       |   Stock Left   |\n");
-    printf("|-------------------------------------------------------------------------|\n");
-    for (int i = 0; i < sizeof(airVariations) / sizeof(airVariations[0]); i++) {
-        printf("| %d. %-25s | RM%.2f             | %-14d |\n", airVariations[i].code, airVariations[i].name, airVariations[i].sellPrice, airVariations[i].stokLvl);
-    }
-      printf("| %d. Back to Menu\n", sizeof(airVariations) / sizeof(airVariations[0]) + 1);
-}
-
-void DessertMenu() {
-    printf("\nDessert Variations\n");
-    printf("|       Dish                   |   Price List       |   Stock Left   |\n");
-    printf("|-------------------------------------------------------------------------|\n");
-    for (int i = 0; i < sizeof(dessertVariations) / sizeof(dessertVariations[0]); i++) {
-        printf("| %d. %-25s | RM%.2f             | %-14d |\n", dessertVariations[i].code, dessertVariations[i].name, dessertVariations[i].sellPrice, dessertVariations[i].stokLvl);
-    }
-     printf("| %d. Back to Menu\n", sizeof(dessertVariations) / sizeof(dessertVariations[0]) + 1);
-}
-
-void checkStockDetails() {
-    FILE *file = fopen(DATASTOCK_FILE, "r");
-    if (file == NULL) {
-        printf("Error opening data stock file. Please make sure to update the stock first.\n");
-        return;
+    // Initialize items with sample data
+    if (access(FILENAME, F_OK) == -1) {
+        createSampleData(items, NUM_ITEMS);
+        saveItemsToFile(FILENAME, items, NUM_ITEMS);
+    } else {
+        loadItemsFromFile(FILENAME, items, NUM_ITEMS);
     }
 
-    char line[100];
-    while (fgets(line, sizeof(line), file)) {
-        printf("%s", line);
+    // Create a backup of the original data
+    createBackup(FILENAME, BACKUP_FILENAME);
+
+    // Load customer data
+    loadCustomers(customers, &numCustomers);
+
+    // Load profit data
+    loadProfitData(PROFIT_FILENAME);
+
+    // Initialize selling prices
+    for (int i = 0; i < NUM_ITEMS; i++) {
+        sellingPrices[i] = items[i].selling_price;
     }
 
-    fclose(file);
-}
-
-void processOrder(char *dishName, double price, int *stokLvl) {
-    char name[50];
-    char phone[20];
-    int quantity;
-    FILE *file = fopen("list.txt", "a");
-    if (file == NULL) {
-        printf("Error opening file for appending.\n");
-        return;
-    }
-
-    printf("Enter your name: ");
-    scanf(" %[^\n]", name);
-    printf("Enter your phone number: ");
-    scanf(" %[^\n]", phone);
-    printf("Enter the quantity: ");
-    scanf("%d", &quantity);
-
-    if (quantity > *stokLvl) {
-        printf("Sorry, we only have %d %s left.\n", *stokLvl, dishName);
-        fclose(file);
-        return;
-    }
-
-    *stokLvl -= quantity;
-
-    fprintf(file, "Name: %s\n", name);
-    fprintf(file, "Phone: %s\n", phone);
-    fprintf(file, "Dish: %s\n", dishName);
-    fprintf(file, "Quantity: %d\n", quantity);
-    fprintf(file, "Total Price: RM%.2f\n", price * quantity);
-    fprintf(file, "Stock left: %d\n", *stokLvl);
-    fprintf(file, "---------------------------------------\n");
-
-    printf("Order for %d %s has been added to your list.\n", quantity, dishName);
-
-    fclose(file);
-    writeStockLevels();
-    writeDataStock();
-}
-
-void updateStock() {
-    int choice, variationChoice, newStock;
-    double newBuyPrice, newSellPrice;
-    int newMinStok, newMaxStok;
-
+    int choice;
     while (1) {
-        displayMenu();
-        printf("Select the category to update stock: ");
+        printf("\n****** Bintang Bulan Kiosk Menu ******\n");
+        printf("-- BAJU RAYA ON TOP BRADER --\n\n");
+        printf("1. Display All Items\n");
+        printf("2. Sell Item\n");
+        printf("3. End of Day Report\n");
+        printf("4. Check Items Below Minimum Stock and Restock\n");
+        printf("5. Exit\n");
+        printf("Enter your choice: ");
         scanf("%d", &choice);
-
-        if (choice == 4) break;
 
         switch (choice) {
             case 1:
-                NasiGorengMenu();
-                printf("Select the variation to update stock: ");
-                scanf("%d", &variationChoice);
-                if (variationChoice >= 1 && variationChoice <= sizeof(nasiGorengVariations) / sizeof(nasiGorengVariations[0])) {
-                    printf("Enter new stock level for %s: ", nasiGorengVariations[variationChoice - 1].name);
-                    scanf("%d", &newStock);
-                    nasiGorengVariations[variationChoice - 1].stokLvl = newStock;
-
-                    printf("Enter new minimum stock for %s: ", nasiGorengVariations[variationChoice - 1].name);
-                    scanf("%d", &newMinStok);
-                    nasiGorengVariations[variationChoice - 1].minStok = newMinStok;
-
-                    printf("Enter new maximum stock for %s: ", nasiGorengVariations[variationChoice - 1].name);
-                    scanf("%d", &newMaxStok);
-                    nasiGorengVariations[variationChoice - 1].maxStok = newMaxStok;
-
-                    printf("Enter new buy price for %s: ", nasiGorengVariations[variationChoice - 1].name);
-                    scanf("%lf", &newBuyPrice);
-                    nasiGorengVariations[variationChoice - 1].buyPrice = newBuyPrice;
-
-                    printf("Enter new sell price for %s: ", nasiGorengVariations[variationChoice - 1].name);
-                    scanf("%lf", &newSellPrice);
-                    nasiGorengVariations[variationChoice - 1].sellPrice = newSellPrice;
-                    
-                    printf("Stock for %s successfully updated.\n\n", nasiGorengVariations[variationChoice - 1].name);
-                    break;
-                } else if (variationChoice == sizeof(nasiGorengVariations) / sizeof(nasiGorengVariations[0]) + 1) {
-                    break; // Exit the switch statement to return to the main loop
-                } else {
-                    printf("Invalid choice.\n");
-                }
+                displayAllItems(items, NUM_ITEMS_LELAKI, NUM_ITEMS_PEREMPUAN, NUM_ITEMS_ACCESSORIES);
                 break;
             case 2:
-                AirMenu();
-                printf("Select the variation to update stock: ");
-                scanf("%d", &variationChoice);
-                if (variationChoice >= 1 && variationChoice <= sizeof(airVariations) / sizeof(airVariations[0])) {
-                    printf("Enter new stock level for %s: ", airVariations[variationChoice - 1].name);
-                    scanf("%d", &newStock);
-                    airVariations[variationChoice - 1].stokLvl = newStock;
-
-                    printf("Enter new minimum stock for %s: ", airVariations[variationChoice - 1].name);
-                    scanf("%d", &newMinStok);
-                    airVariations[variationChoice - 1].minStok = newMinStok;
-
-                    printf("Enter new maximum stock for %s: ", airVariations[variationChoice - 1].name);
-                    scanf("%d", &newMaxStok);
-                    airVariations[variationChoice - 1].maxStok = newMaxStok;
-
-                    printf("Enter new buy price for %s: ", airVariations[variationChoice - 1].name);
-                    scanf("%lf", &newBuyPrice);
-                    airVariations[variationChoice - 1].buyPrice = newBuyPrice;
-
-                    printf("Enter new sell price for %s: ", airVariations[variationChoice - 1].name);
-                    scanf("%lf", &newSellPrice);
-                    airVariations[variationChoice - 1].sellPrice = newSellPrice;
-                    printf("Stock for %s successfully updated.\n\n", airVariations[variationChoice - 1].name);
-                    break;
-                } else if (variationChoice == sizeof(airVariations) / sizeof(airVariations[0]) + 1) {
-                    break; // Exit the switch statement to return to the main loop
-                } else {
-                    printf("Invalid choice.\n");
-                }
+                sellItem(items, NUM_ITEMS, customers, &numCustomers, sellingPrices);
                 break;
             case 3:
-                DessertMenu();
-                printf("Select the variation to update stock: ");
-                scanf("%d", &variationChoice);
-                if (variationChoice >= 1 && variationChoice <= sizeof(dessertVariations) / sizeof(dessertVariations[0])) {
-                    printf("Enter new stock level for %s: ", dessertVariations[variationChoice - 1].name);
-                    scanf("%d", &newStock);
-                    dessertVariations[variationChoice - 1].stokLvl = newStock;
-
-                    printf("Enter new minimum stock for %s: ", dessertVariations[variationChoice - 1].name);
-                    scanf("%d", &newMinStok);
-                    dessertVariations[variationChoice - 1].minStok = newMinStok;
-
-                    printf("Enter new maximum stock for %s: ", dessertVariations[variationChoice - 1].name);
-                    scanf("%d", &newMaxStok);
-                    dessertVariations[variationChoice - 1].maxStok = newMaxStok;
-
-                    printf("Enter new buy price for %s: ", dessertVariations[variationChoice - 1].name);
-                    scanf("%lf", &newBuyPrice);
-                    dessertVariations[variationChoice - 1].buyPrice = newBuyPrice;
-
-                    printf("Enter new sell price for %s: ", dessertVariations[variationChoice - 1].name);
-                    scanf("%lf", &newSellPrice);
-                    dessertVariations[variationChoice - 1].sellPrice = newSellPrice;
-                    
-                    printf("Stock for %s successfully updated.\n\n", dessertVariations[variationChoice - 1].name);
-                    break;
-                } else if (variationChoice == sizeof(dessertVariations) / sizeof(dessertVariations[0]) + 1) {
-                    break; // Exit the switch statement to return to the main loop
-                } else {
-                    printf("Invalid choice.\n");
-                }
-                break;
-            default:
-                printf("Invalid choice.\n");
-                break;
-        }
-
-        writeStockLevels();
-        writeDataStock();
-    }
-}
-
-
-int main() {
-    int selection, 
-    dishSelection;
-
-    readStockLevels();
-
-       while (1) {
-        printf("\n    Welcome to Our Shop!\n");
-        printf("Please make a selection\n");
-        printf("1. Menu\n");
-        printf("2. Update Stock\n");
-        printf("3. Check Stock Details\n");
-        printf("4. Exit\n");
-
-        printf("Enter your selection: ");
-        scanf("%d", &selection);
-
-        switch (selection) {
-            case 1: {
-                int dishSelection;
-                do {
-                    displayMenu();
-                    printf("\nWhat would you like to see details for?\n");
-                    printf("Enter your selection: ");
-                    scanf("%d", &dishSelection);
-
-                    if (dishSelection == 4) {
-                        break; // Go back
-                    }
-
-                    switch (dishSelection) {
-                        case 1:
-                            NasiGorengMenu();
-                            printf("\nWhich Nasi Goreng variation do you want: ");
-                            scanf("%d", &dishSelection);
-                            if (dishSelection >= 1 && dishSelection <= sizeof(nasiGorengVariations) / sizeof(nasiGorengVariations[0])) {
-                                processOrder(nasiGorengVariations[dishSelection - 1].name, nasiGorengVariations[dishSelection - 1].sellPrice, &nasiGorengVariations[dishSelection - 1].stokLvl);
-                            } else {
-                                printf("Invalid selection.\n");
-                            }
-                            break;
-                        case 2:
-                            AirMenu();
-                            printf("\nWhich Air variation do you want: ");
-                            scanf("%d", &dishSelection);
-                            if (dishSelection >= 1 && dishSelection <= sizeof(airVariations) / sizeof(airVariations[0])) {
-                                processOrder(airVariations[dishSelection - 1].name, airVariations[dishSelection - 1].sellPrice, &airVariations[dishSelection - 1].stokLvl);
-                            } else {
-                                printf("Invalid selection.\n");
-                            }
-                            break;
-                        case 3:
-                            DessertMenu();
-                            printf("\nWhich Dessert variation do you want: ");
-                            scanf("%d", &dishSelection);
-                            if (dishSelection >= 1 && dishSelection <= sizeof(dessertVariations) / sizeof(dessertVariations[0])) {
-                                processOrder(dessertVariations[dishSelection - 1].name, dessertVariations[dishSelection - 1].sellPrice, &dessertVariations[dishSelection - 1].stokLvl);
-                            } else {
-                                printf("Invalid selection.\n");
-                            }
-                            break;
-                        default:
-                            printf("Invalid selection.\n");
-                            break;
-                    }
-                } while (1); // Loop until "Go Back" is selected
-                break;
-            }
-            case 2:
-                updateStock();
-                break;
-            case 3:
-                checkStockDetails();
+                displayEndOfDayReport(items, NUM_ITEMS);
                 break;
             case 4:
-                printf("Thank you! See you again ^_^\n");
-                return 0;
-            default:
-                printf("Invalid selection.\n");
+                checkItemsBelowLimitAndRestock(items, NUM_ITEMS);
+                saveItemsToFile(FILENAME, items, NUM_ITEMS);
                 break;
+            case 5:
+                saveProfitData(PROFIT_FILENAME, grossProfit, netProfit, totalRestockingCost, items, NUM_ITEMS); // Save profit data before exiting
+                exit(0);
+            default:
+                printf("Invalid choice. Please try again.\n");
         }
     }
 
