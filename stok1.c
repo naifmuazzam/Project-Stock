@@ -45,8 +45,6 @@ float totalProfit = 0.0;
 float totalRestockingCost = 0.0;
 float grossProfit = 0.0;
 float netProfit = 0.0;
-float capital = 0.0; // initial capital
-float owedMoney = 0.0;  // Amount owed for restocking
 
 void trimTrailingSpaces(char *str) {
     int index, i;
